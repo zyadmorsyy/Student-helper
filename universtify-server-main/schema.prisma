@@ -1,0 +1,221 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Major {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique
+  name          String?
+  majorStudents Student[] @relation("MajorStudents")
+  minorStudents Student[] @relation("MinorStudents")
+  majorCourses  Course[]  @relation("MajorCourses")
+  minorCourses  Course[]  @relation("MinorCourses")
+
+}
+
+model Semester {
+  id            Int               @id @default(autoincrement())
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  type          SemesterType      @default(FALL)
+  year          Int?              @default(2021)
+  status        SemesterStatus    @default(open)
+  Courses       Course[]
+  students      StudentSemester[]
+  enrollments   Enrollment[]
+  coordinatorId Int?
+  coordinator   Coordinator?      @relation(fields: [coordinatorId], references: [id])
+}
+
+model Student {
+  id                   Int               @id @default(autoincrement())
+  uniCode              String            @unique @default(uuid())
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  fname                String            @db.VarChar(255)
+  lname                String            @db.VarChar(255)
+  gender               Gender?
+  password             String?           @default(uuid())
+  email                String            @unique
+  level                Int               @default(1)
+  creditDone           Int               @default(0)
+  role                 String            @default("student")
+  supervisorId         Int?
+  supervisor           Supervisor?       @relation(fields: [supervisorId], references: [id])
+  coursesFinished      FinishedCourses[]
+  numericalGPA         Float             @default(4)
+  numericalLastTermGPA Float?            @default(4)
+  avatar               String?           @default("/static/images/avatars/avatar_4")
+  enrollments          Enrollment[]
+  notifications        Notifications[]
+  majorId              Int?
+  major                Major?            @relation("MajorStudents", fields: [majorId], references: [id])
+  minorId              Int?
+  minor                Major?            @relation("MinorStudents", fields: [minorId], references: [id])
+  coordinatorId        Int?
+  coordinator          Coordinator?      @relation(fields: [coordinatorId], references: [id])
+  semesters            StudentSemester[]
+}
+
+model Supervisor {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  fname           String            @db.VarChar(255)
+  lname           String            @db.VarChar(255)
+  phone           String?
+  gender          Gender?
+  password        String?           @default(uuid())
+  email           String            @unique
+  role            String            @default("supervisor")
+  avatar          String?
+  students        Student[]
+  enrollments     Enrollment[]
+  courses         Course[]
+  finishedCourses FinishedCourses[]
+  notifications   Notifications[]
+  coordinatorId   Int?
+  coordinator     Coordinator?      @relation(fields: [coordinatorId], references: [id])
+}
+
+model Coordinator {
+  id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  fname         String          @db.VarChar(255)
+  lname         String          @db.VarChar(255)
+  phone         String?
+  gender        Gender?
+  password      String?         @default(uuid())
+  email         String          @unique
+  role          String          @default("coordinator")
+  avatar        String?
+  students      Student[]
+  courses       Course[]
+  notifications Notifications[]
+  supervisors   Supervisor[]
+  Semester      Semester[]
+}
+
+model Course {
+  id               Int               @id @default(autoincrement())
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  name             String
+  level            Int?
+  discreption      String?
+  credit           Int?
+  available        Boolean           @default(true)
+  courseCode       String?
+  type             Type?
+  isElective       Boolean           @default(false)
+  semesters        Semester[]
+  prerequisites    Course[]          @relation("CoursePrerequisites", references: [id])
+  prerequisitedBy  Course[]          @relation("CoursePrerequisites", references: [id])
+  studentsFinished FinishedCourses[]
+  enrollments      Enrollment[]
+  majorId          Int?
+  major            Major?            @relation("MajorCourses", fields: [majorId], references: [id])
+  minorId          Int?
+  minor            Major?            @relation("MinorCourses", fields: [minorId], references: [id])
+  coordinatorId    Int?
+  coordinator      Coordinator?      @relation(fields: [coordinatorId], references: [id])
+  instructor       Supervisor?       @relation(fields: [instructorId], references: [id])
+  instructorId     Int?
+}
+
+model Enrollment {
+  id              Int              @id @default(autoincrement())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  supervisor      Supervisor?      @relation(fields: [supervisorId], references: [id])
+  supervisorId    Int?
+  student         Student?         @relation(fields: [studentID], references: [id])
+  studentID       Int?
+  course          Course?          @relation(fields: [courseID], references: [id])
+  courseID        Int?
+  credit          Int              @default(0)
+  isAproved       Boolean          @default(false)
+  status          String           @default("in review")
+  studentSemester StudentSemester? @relation(fields: [studentID, semesterId], references: [studentId, semesterId])
+  semesterId      Int?
+  Semester        Semester?        @relation(fields: [semesterId], references: [id])
+}
+
+model FinishedCourses {
+  id           Int              @id @default(autoincrement())
+  course       Course           @relation(fields: [courseId], references: [id])
+  courseId     Int
+  student      Student          @relation(fields: [studentID], references: [id])
+  studentID    Int
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  grade        Float?
+  credit       Int?
+  semester     StudentSemester? @relation(fields: [studentID, semesterId], references: [studentId, semesterId])
+  semesterId   Int?
+  instructor   Supervisor?      @relation(fields: [instructorId], references: [id])
+  instructorId Int?
+}
+
+model StudentSemester {
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  student         Student           @relation(fields: [studentId], references: [id])
+  studentId       Int
+  semester        Semester          @relation(fields: [semesterId], references: [id])
+  semesterId      Int
+  semesterGPA     Float?            @default(4)
+  creditDone      Int?              @default(0)
+  creditHave      Int?              @default(18)
+  FinishedCourses FinishedCourses[]
+  enrollments     Enrollment[]
+
+  @@id([studentId, semesterId])
+}
+
+model Notifications {
+  id            Int          @id @default(autoincrement())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  supervisor    Supervisor?  @relation(fields: [supervisorId], references: [id])
+  supervisorId  Int?
+  student       Student?     @relation(fields: [studentID], references: [id])
+  studentID     Int?
+  status        Int?         @default(0)
+  data          Json
+  Coordinator   Coordinator? @relation(fields: [coordinatorId], references: [id])
+  coordinatorId Int?
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum SemesterType {
+  FALL
+  SPRING
+  SUMMER
+}
+
+enum SemesterStatus {
+  open
+  closed
+  current
+  finished
+}
+
+enum Type {
+  majorElective
+  majorRequirment
+  minorRequirment
+  universityRequirment
+  facultyRequirment
+  universityElective
+}

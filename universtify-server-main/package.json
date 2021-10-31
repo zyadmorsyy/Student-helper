@@ -1,0 +1,35 @@
+{
+  "name": "registration-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js",
+    "seed": "npx prisma generate && npx prisma db push && psql -U postgres -d registration -c  \"DROP SCHEMA public CASCADE;\" && psql -U postgres -d registration -c  \"CREATE SCHEMA public;\" && psql -U postgres -d registration -c  \"GRANT ALL ON SCHEMA public TO postgres\" && psql -U postgres -d registration -c  \"GRANT ALL ON SCHEMA public TO public;\" && psql -U postgres -d registration  <db.sql",
+    "studio": "npx prisma studio"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "faker": "^5.5.3",
+    "nodemon": "^2.0.9",
+    "prisma": "^2.25.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^2.25.0",
+    "cookie-parser": "~1.4.4",
+    "cors": "^2.8.5",
+    "debug": "~2.6.9",
+    "express": "^4.17.1",
+    "http-errors": "~1.6.3",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "~1.9.1",
+    "npm-run-all": "^4.1.5",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
+    "session": "^0.1.0",
+    "session-file-store": "^1.4.0"
+  }
+}

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Student" ADD COLUMN     "numericalGPA" DOUBLE PRECISION DEFAULT 4,
+ADD COLUMN     "numericalLastTermGPA" DOUBLE PRECISION DEFAULT 4;
